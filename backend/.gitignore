@@ -1,0 +1,58 @@
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies and builds
+node_modules/
+dist/
+dist-ssr/
+build/
+
+# Coverage and reports
+coverage/
+.nyc_output/
+*.lcov
+
+# Caches and temp
+.cache/
+.parcel-cache/
+.tmp/
+tmp/
+temp/
+.npm
+.eslintcache
+*.tsbuildinfo
+
+# Process and locks
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Uploads and storage
+uploads/
+storage/
+dumps/
+
+# Env files
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Project-specific
+.qodo/
