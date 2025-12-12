@@ -1,0 +1,285 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Line clamp utility */
+@layer utilities {
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* Corporate/Professional Theme */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  /* Corporate Button Styles */
+  .btn-corporate {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-corporate-primary {
+    @apply btn-corporate bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500 shadow-corporate hover:shadow-corporate-lg transform hover:scale-105 active:scale-95;
+  }
+
+  .btn-corporate-secondary {
+    @apply btn-corporate bg-gray-100 text-text-primary border border-gray-200 hover:bg-gray-200 focus:ring-gray-500 shadow-sm hover:shadow-corporate;
+  }
+
+  .btn-corporate-outline {
+    @apply btn-corporate bg-transparent text-primary-500 border border-primary-500 hover:bg-primary-50 focus:ring-primary-500;
+  }
+
+  .btn-corporate-ghost {
+    @apply btn-corporate bg-transparent text-text-muted hover:bg-gray-100 hover:text-text-primary focus:ring-gray-500;
+  }
+
+  /* Corporate Card Styles */
+  .card-corporate {
+    @apply bg-surface border border-border rounded-corporate shadow-corporate hover:shadow-corporate-lg transition-all duration-200;
+  }
+
+  .card-corporate-elevated {
+    @apply card-corporate shadow-corporate-lg hover:shadow-corporate-xl;
+  }
+
+  /* Corporate Input Styles */
+  .input-corporate {
+    @apply w-full px-3 py-2 text-sm border border-border rounded-lg bg-surface text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200;
+  }
+
+  .input-corporate-error {
+    @apply input-corporate border-error-500 focus:ring-error-500 focus:border-error-500;
+  }
+
+  /* Corporate Modal Styles */
+  .modal-corporate {
+    @apply bg-surface border border-border rounded-corporate-lg shadow-corporate-xl;
+  }
+
+  /* Corporate Table Styles */
+  .table-corporate {
+    @apply w-full border-collapse bg-surface rounded-corporate overflow-hidden shadow-corporate;
+  }
+
+  .table-corporate th {
+    @apply px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider bg-gray-50 border-b border-border;
+  }
+
+  .table-corporate td {
+    @apply px-4 py-3 text-sm text-text-primary border-b border-border;
+  }
+
+  .table-corporate tr:hover {
+    @apply bg-gray-50;
+  }
+
+  /* Corporate Badge Styles */
+  .badge-corporate {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-corporate-primary {
+    @apply badge-corporate bg-primary-100 text-primary-700;
+  }
+
+  .badge-corporate-success {
+    @apply badge-corporate bg-success-100 text-success-700;
+  }
+
+  .badge-corporate-error {
+    @apply badge-corporate bg-error-100 text-error-700;
+  }
+
+  .badge-corporate-warning {
+    @apply badge-corporate bg-yellow-100 text-yellow-700;
+  }
+
+  .badge-corporate-info {
+    @apply badge-corporate bg-accent-100 text-accent-700;
+  }
+
+  /* Corporate Navigation Styles */
+  .nav-corporate {
+    @apply bg-surface border-b border-border shadow-corporate;
+  }
+
+  .nav-corporate-item {
+    @apply px-3 py-2 text-sm font-medium text-text-muted hover:text-text-primary hover:bg-gray-50 rounded-lg transition-all duration-200;
+  }
+
+  .nav-corporate-item-active {
+    @apply nav-corporate-item text-primary-500 bg-primary-50;
+  }
+
+  /* Corporate Sidebar Styles */
+  .sidebar-corporate {
+    @apply bg-surface border-r border-border shadow-corporate;
+  }
+
+  .sidebar-corporate-item {
+    @apply flex items-center px-3 py-2 text-sm font-medium text-text-muted hover:text-text-primary hover:bg-gray-50 rounded-lg transition-all duration-200;
+  }
+
+  .sidebar-corporate-item-active {
+    @apply sidebar-corporate-item text-primary-500 bg-primary-50;
+  }
+
+  /* Corporate Form Styles */
+  .form-corporate {
+    @apply space-y-6;
+  }
+
+  .form-corporate-group {
+    @apply space-y-2;
+  }
+
+  .form-corporate-label {
+    @apply block text-sm font-medium text-text-primary;
+  }
+
+  .form-corporate-error {
+    @apply text-sm text-error-500;
+  }
+
+  /* Corporate Progress Styles */
+  .progress-corporate {
+    @apply w-full bg-gray-200 rounded-full h-2;
+  }
+
+  .progress-corporate-bar {
+    @apply h-2 rounded-full transition-all duration-300;
+  }
+
+  .progress-corporate-success {
+    @apply progress-corporate-bar bg-success-500;
+  }
+
+  .progress-corporate-warning {
+    @apply progress-corporate-bar bg-yellow-500;
+  }
+
+  .progress-corporate-error {
+    @apply progress-corporate-bar bg-error-500;
+  }
+
+  /* Corporate Status Styles */
+  .status-corporate {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-corporate-active {
+    @apply status-corporate bg-primary-100 text-primary-700;
+  }
+
+  .status-corporate-completed {
+    @apply status-corporate bg-success-100 text-success-700;
+  }
+
+  .status-corporate-paused {
+    @apply status-corporate bg-gray-100 text-gray-700;
+  }
+
+  .status-corporate-next {
+    @apply status-corporate bg-yellow-100 text-yellow-700;
+  }
+
+  /* Corporate Priority Styles */
+  .priority-corporate {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .priority-corporate-high {
+    @apply priority-corporate bg-error-100 text-error-700;
+  }
+
+  .priority-corporate-medium {
+    @apply priority-corporate bg-yellow-100 text-yellow-700;
+  }
+
+  .priority-corporate-low {
+    @apply priority-corporate bg-success-100 text-success-700;
+  }
+
+  /* Corporate Layout Styles */
+  .layout-corporate {
+    @apply min-h-screen bg-background;
+  }
+
+  .container-corporate {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-corporate {
+    @apply py-corporate;
+  }
+
+  .section-corporate-lg {
+    @apply py-corporate-lg;
+  }
+
+  /* Corporate Animation Classes */
+  .animate-corporate-fade-in {
+    @apply animate-fade-in;
+  }
+
+  .animate-corporate-slide-up {
+    @apply animate-slide-up;
+  }
+
+  .animate-corporate-scale-in {
+    @apply animate-scale-in;
+  }
+}
