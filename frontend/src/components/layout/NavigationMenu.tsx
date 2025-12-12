@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Tooltip from '../ui/tooltip';
-import { NavigationItem } from '../../AppLayout/components/hooks/useAuthLayout';
+import { NavigationItem } from '../../hooks/useAuthLayout';
 import { motion } from 'framer-motion';
 
 export interface NavigationMenuProps {

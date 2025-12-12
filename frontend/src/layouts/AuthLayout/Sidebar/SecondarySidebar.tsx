@@ -9,12 +9,9 @@ import {
   ChevronRight,
   Layers,
   ChevronDown,
-  FolderOpen,
-  Plus,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Structure } from '../../../hooks/useAuthLayout';
-import Button from '@components/ui/Button';
 
 export interface SecondarySidebarProps {
   collapsed: boolean;
