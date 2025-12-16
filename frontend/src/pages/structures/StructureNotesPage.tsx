@@ -1,106 +1,78 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-
-interface Structure {
-  id: string;
-  name: string;
-  levels: string[];
-}
-
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Star, Tag } from 'lucide-react';
+import { Plus, FileText, Tag, Star, BookOpen } from 'lucide-react';
+import NoteModal from '../notes/NoteModal';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import NoteModal from '../notes/NoteModal';
 
-type Note = {
-  _id: string;
-  title: string;
-  content: string;
-  category: string;
-  tags: string[];
-  isFavorite: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+import { Badge } from '../../components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import {
+  getNotes,
+  createNote,
+  updateNote,
+  deleteNote,
+  toggleNoteFavorite,
+  Note,
+} from '../../lib/api/api';
 
 const StructureNotesPage: React.FC = () => {
-  const { structureId } = useParams();
-
-  const userId = useMemo(() => {
-    try {
-      const rawUser = localStorage.getItem('auth:user');
-      const user = rawUser ? JSON.parse(rawUser) : null;
-      return user?._id || null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const structuresKey = useMemo(
-    () => (userId ? `structures:${userId}` : null),
-    [userId]
-  );
-  const scopedKey = useMemo(
-    () =>
-      userId && structureId ? `scoped:${userId}:${structureId}:notes` : null,
-    [userId, structureId]
-  );
-
-  const [structure, setStructure] = useState<Structure | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!structuresKey || !structureId) return;
-    try {
-      const raw = localStorage.getItem(structuresKey);
-      const list: Structure[] = raw ? JSON.parse(raw) : [];
-      const s = list.find((x) => x.id === structureId) || null;
-      setStructure(s);
-    } catch {}
-  }, [structuresKey, structureId]);
+  const categories = [
+    'Work',
+    'Personal',
+    'Ideas',
+    'Recipes',
+    'Travel',
+    'Learning',
+  ];
 
   useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    filterNotes();
+  }, [notes, categoryFilter, showFavoritesOnly]);
+
+  const loadData = async () => {
     try {
       setLoading(true);
-      const raw = scopedKey ? localStorage.getItem(scopedKey) : null;
-      setNotes(raw ? JSON.parse(raw) : []);
+      const notesData = await getNotes();
+      setNotes(notesData);
+    } catch (error) {
+      console.error('Failed to load notes:', error);
     } finally {
       setLoading(false);
     }
-  }, [scopedKey]);
+  };
 
-  useEffect(() => {
-    let out = [...notes];
-    if (categoryFilter !== 'all')
-      out = out.filter((n) => n.category === categoryFilter);
-    if (showFavoritesOnly) out = out.filter((n) => n.isFavorite);
-    setFilteredNotes(out);
-  }, [notes, categoryFilter, showFavoritesOnly]);
+  const filterNotes = () => {
+    let filtered = [...notes];
 
-  const categories = useMemo(() => {
-    const set = new Set<string>([
-      'Work',
-      'Personal',
-      'Ideas',
-      'Recipes',
-      'Travel',
-      'Learning',
-    ]);
-    notes.forEach((n) => n.category && set.add(n.category));
-    return Array.from(set);
-  }, [notes]);
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter((note) => note.category === categoryFilter);
+    }
 
-  const persist = (list: Note[]) => {
-    if (!scopedKey) return;
-    localStorage.setItem(scopedKey, JSON.stringify(list));
-    setNotes(list);
+    if (showFavoritesOnly) {
+      filtered = filtered.filter((note) => note.isFavorite);
+    }
+
+    setFilteredNotes(filtered);
   };
 
   const handleCreate = () => {
@@ -113,65 +85,54 @@ const StructureNotesPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleDelete = (note: Note) => {
-    if (!window.confirm('Delete this note?')) return;
-    persist(notes.filter((n) => n._id !== note._id));
-  };
-
-  const handleSave = (data: Omit<Note, '_id' | 'createdAt' | 'updatedAt'>) => {
-    const now = new Date().toISOString();
-    if (editingNote) {
-      persist(
-        notes.map((n) =>
-          n._id === editingNote._id
-            ? { ...editingNote, ...data, updatedAt: now }
-            : n
-        )
-      );
-    } else {
-      persist([
-        ...notes,
-        {
-          ...data,
-          _id: crypto.randomUUID(),
-          createdAt: now,
-          updatedAt: now,
-        } as Note,
-      ]);
+  const handleDelete = async (note: Note) => {
+    if (window.confirm('Are you sure you want to delete this note?')) {
+      try {
+        await deleteNote(note._id);
+        await loadData();
+      } catch (error) {
+        console.error('Failed to delete note:', error);
+      }
     }
-    setModalOpen(false);
   };
 
-  const handleToggleFavorite = (note: Note) => {
-    persist(
-      notes.map((n) =>
-        n._id === note._id
-          ? {
-              ...n,
-              isFavorite: !n.isFavorite,
-              updatedAt: new Date().toISOString(),
-            }
-          : n
-      )
-    );
+  const handleSave = async (
+    noteData: Omit<Note, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+  ) => {
+    try {
+      if (editingNote) {
+        await updateNote(editingNote._id, noteData);
+      } else {
+        await createNote(noteData);
+      }
+      setModalOpen(false);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to save note:', error);
+    }
   };
 
-  const stats = useMemo(() => {
+  const handleToggleFavorite = async (note: Note) => {
+    try {
+      await toggleNoteFavorite(note._id);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
+
+  const getNotesStats = () => {
     const totalNotes = notes.length;
     const favoriteNotes = notes.filter((n) => n.isFavorite).length;
-    const categoriesCount = new Set(
-      notes.map((n) => n.category).filter(Boolean)
-    ).size;
-    return { totalNotes, favoriteNotes, categoriesCount };
-  }, [notes]);
+    const categoryCounts = categories.reduce((acc, category) => {
+      acc[category] = notes.filter((n) => n.category === category).length;
+      return acc;
+    }, {} as Record<string, number>);
 
-  if (loading) {
-    return (
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        Loading...
-      </div>
-    );
-  }
+    return { totalNotes, favoriteNotes, categoryCounts };
+  };
+
+  const stats = getNotesStats();
 
   return (
     <>
@@ -181,6 +142,7 @@ const StructureNotesPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className='space-y-8'
         >
+          {/* Header */}
           <div className='flex justify-between items-center'>
             <div>
               <div className='flex items-center space-x-3 mb-2'>
@@ -188,11 +150,12 @@ const StructureNotesPage: React.FC = () => {
                   <FileText className='w-8 h-8 text-white' />
                 </div>
                 <h1 className='text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent'>
-                  {structure?.name} – Notes
+                  Notes
                 </h1>
               </div>
               <p className='text-lg text-gray-600'>
-                Scoped notes for this structure only.
+                Capture and organize your thoughts, ideas, and important
+                information.
               </p>
             </div>
             <Button
@@ -200,93 +163,155 @@ const StructureNotesPage: React.FC = () => {
               className='bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'
               size='lg'
             >
-              <Plus className='w-5 h-5 mr-2' /> New Note
+              <Plus className='w-5 h-5 mr-2' />
+              New Note
             </Button>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className='p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100'>
-                <div className='text-2xl font-bold text-amber-700'>
-                  {stats.totalNotes}
-                </div>
-                <div className='text-sm font-medium text-amber-600'>
-                  Total Notes
-                </div>
-              </Card>
-            </motion.div>
+          {/* Stats Cards */}
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className='p-6 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-100'>
-                <div className='text-2xl font-bold text-pink-700'>
-                  {stats.favoriteNotes}
-                </div>
-                <div className='text-sm font-medium text-pink-600'>
-                  Favorites
+              <Card className='p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100 hover:shadow-lg transition-shadow'>
+                <div className='flex items-center space-x-3'>
+                  <div className='p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg'>
+                    <FileText className='w-6 h-6 text-white' />
+                  </div>
+                  <div>
+                    <p className='text-2xl font-bold text-amber-700'>
+                      {stats.totalNotes}
+                    </p>
+                    <p className='text-sm font-medium text-amber-600'>
+                      Total Notes
+                    </p>
+                  </div>
                 </div>
               </Card>
             </motion.div>
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Card className='p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-100'>
-                <div className='text-2xl font-bold text-blue-700'>
-                  {stats.categoriesCount}
+              <Card className='p-6 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-100 hover:shadow-lg transition-shadow'>
+                <div className='flex items-center space-x-3'>
+                  <div className='p-3 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg'>
+                    <Star className='w-6 h-6 text-white' />
+                  </div>
+                  <div>
+                    <p className='text-2xl font-bold text-pink-700'>
+                      {stats.favoriteNotes}
+                    </p>
+                    <p className='text-sm font-medium text-pink-600'>
+                      Favorites
+                    </p>
+                  </div>
                 </div>
-                <div className='text-sm font-medium text-blue-600'>
-                  Categories
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className='p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-100 hover:shadow-lg transition-shadow'>
+                <div className='flex items-center space-x-3'>
+                  <div className='p-3 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg'>
+                    <BookOpen className='w-6 h-6 text-white' />
+                  </div>
+                  <div>
+                    <p className='text-2xl font-bold text-blue-700'>
+                      {categories.length}
+                    </p>
+                    <p className='text-sm font-medium text-blue-600'>
+                      Categories
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className='p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-100 hover:shadow-lg transition-shadow'>
+                <div className='flex items-center space-x-3'>
+                  <div className='p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg'>
+                    <Tag className='w-6 h-6 text-white' />
+                  </div>
+                  <div>
+                    <p className='text-2xl font-bold text-green-700'>
+                      {[...new Set(notes.flatMap((n) => n.tags))].length}
+                    </p>
+                    <p className='text-sm font-medium text-green-600'>
+                      Unique Tags
+                    </p>
+                  </div>
                 </div>
               </Card>
             </motion.div>
           </div>
 
+          {/* Search and Filters */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
             className='bg-white p-6 rounded-xl shadow-sm border-2 border-amber-100'
           >
-            <div className='flex flex-wrap gap-3 items-center'>
-              <span className='text-sm font-semibold text-gray-700'>
-                Filter:
-              </span>
-              <label className='text-sm font-medium text-gray-600'>
-                Category:
-              </label>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className='w-40 border border-amber-200 rounded px-2 py-1 text-sm'
-              >
-                <option value='all'>All Categories</option>
-                {categories.map((c) => (
-                  <option
-                    key={c}
-                    value={c}
-                  >
-                    {c}
-                  </option>
-                ))}
-              </select>
+            <div className='flex flex-wrap gap-4 items-center'>
+              <div className='flex items-center space-x-2'>
+                <span className='text-sm font-semibold text-gray-700'>
+                  Filter:
+                </span>
+              </div>
+
+              <div className='flex items-center space-x-2'>
+                <label className='text-sm font-medium text-gray-600'>
+                  Category:
+                </label>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
+                  <SelectTrigger className='w-40 border-amber-200 focus:border-amber-500'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className='bg-white border border-gray-200 shadow-lg z-50'>
+                    <SelectItem value='all'>All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem
+                        key={category}
+                        value={category}
+                      >
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button
                 variant={showFavoritesOnly ? 'primary' : 'outline'}
                 size='sm'
-                onClick={() => setShowFavoritesOnly((v) => !v)}
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 className={
                   showFavoritesOnly
                     ? 'bg-pink-500 hover:bg-pink-600 text-white'
                     : 'border-pink-200 text-pink-600 hover:bg-pink-50'
                 }
               >
-                <Star className='w-4 h-4 mr-2' /> Favorites Only
+                <Star className='w-4 h-4 mr-2' />
+                Favorites Only
               </Button>
+
               {(categoryFilter !== 'all' || showFavoritesOnly) && (
                 <Button
                   variant='outline'
@@ -303,24 +328,28 @@ const StructureNotesPage: React.FC = () => {
             </div>
           </motion.div>
 
+          {/* Notes Grid */}
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {filteredNotes.map((note, index) => (
               <motion.div
                 key={note._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.1 }}
               >
-                <Card className='min-h-[280px] flex flex-col justify-between p-6 bg-gradient-to-br from-white to-amber-50 border-2 border-amber-100 hover:border-amber-300 shadow-lg transition-all duration-300 h-full'>
+                <Card className='min-h-[320px] flex flex-col justify-between p-6 bg-gradient-to-br from-white to-amber-50 border-2 border-amber-100 hover:border-amber-300 shadow-lg transition-all duration-300 h-full'>
                   <div>
                     <div className='flex items-start justify-between mb-4'>
                       <div className='flex-1'>
                         <h3 className='text-lg font-bold text-gray-900 mb-2'>
                           {note.title}
                         </h3>
-                        <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 border border-amber-200'>
+                        <Badge
+                          variant='outline'
+                          className='text-xs border-amber-200 text-amber-700'
+                        >
                           {note.category}
-                        </span>
+                        </Badge>
                       </div>
                       <button
                         onClick={() => handleToggleFavorite(note)}
@@ -381,6 +410,7 @@ const StructureNotesPage: React.FC = () => {
               </motion.div>
             ))}
 
+            {/* Empty State */}
             {filteredNotes.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -392,16 +422,21 @@ const StructureNotesPage: React.FC = () => {
                     <FileText className='w-8 h-8 text-amber-600' />
                   </div>
                   <h3 className='text-xl font-bold text-gray-900 mb-2'>
-                    No notes yet
+                    {categoryFilter !== 'all' || showFavoritesOnly
+                      ? 'No notes match your filters'
+                      : 'No notes yet'}
                   </h3>
                   <p className='text-gray-600 mb-6 max-w-md mx-auto'>
-                    Start capturing your thoughts by creating your first note.
+                    {categoryFilter !== 'all' || showFavoritesOnly
+                      ? "Try adjusting your filters to find what you're looking for."
+                      : 'Start capturing your thoughts and ideas by creating your first note.'}
                   </p>
                   <Button
                     onClick={handleCreate}
                     className='bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
                   >
-                    <Plus className='w-4 h-4 mr-2' /> Create Your First Note
+                    <Plus className='w-4 h-4 mr-2' />
+                    Create Your First Note
                   </Button>
                 </Card>
               </motion.div>
@@ -410,10 +445,11 @@ const StructureNotesPage: React.FC = () => {
         </motion.div>
       </div>
 
+      {/* Modal */}
       <NoteModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSave={(data: any) => handleSave(data)}
+        onSave={handleSave as any}
         note={editingNote as any}
         categories={categories}
       />

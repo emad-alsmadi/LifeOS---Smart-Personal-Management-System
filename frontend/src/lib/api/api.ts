@@ -164,7 +164,9 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     // Try to get the error message from the response
     try {
       const errorData = await response.json();
-      throw new Error(errorData.message || `API request failed: ${response.statusText}`);
+      throw new Error(
+        errorData.message || `API request failed: ${response.statusText}`
+      );
     } catch (parseError) {
       // If we can't parse the error response, use a generic message
       if (response.status === 401) {
@@ -204,7 +206,10 @@ export const logout = () => {
   setAuthToken(null);
 };
 
-export const changePassword = async (currentPassword: string, newPassword: string) => {
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+) => {
   const response = await apiRequest('/auth/change-password', {
     method: 'PUT',
     body: JSON.stringify({ currentPassword, newPassword }),
@@ -232,7 +237,10 @@ export const createGoal = async (goal: GoalCreate): Promise<Goal> => {
   });
 };
 
-export const updateGoal = async (id: string, goal: GoalCreate): Promise<Goal> => {
+export const updateGoal = async (
+  id: string,
+  goal: GoalCreate
+): Promise<Goal> => {
   return apiRequest(`/goals/${id}`, {
     method: 'PUT',
     body: JSON.stringify(goal),
@@ -245,7 +253,9 @@ export const deleteGoal = async (id: string): Promise<void> => {
   });
 };
 
-export const getGoalObjectiveNames = async (): Promise<Array<{_id: string, title: string}>> => {
+export const getGoalObjectiveNames = async (): Promise<
+  Array<{ _id: string; title: string }>
+> => {
   return apiRequest('/goals/objectives/names');
 };
 
@@ -254,14 +264,19 @@ export const getObjectives = async (): Promise<Objective[]> => {
   return apiRequest('/objectives');
 };
 
-export const createObjective = async (objective: ObjectiveCreate): Promise<Objective> => {
+export const createObjective = async (
+  objective: ObjectiveCreate
+): Promise<Objective> => {
   return apiRequest('/objectives', {
     method: 'POST',
     body: JSON.stringify(objective),
   });
 };
 
-export const updateObjective = async (id: string, objective: Partial<Objective>): Promise<Objective> => {
+export const updateObjective = async (
+  id: string,
+  objective: Partial<Objective>
+): Promise<Objective> => {
   return apiRequest(`/objectives/${id}`, {
     method: 'PUT',
     body: JSON.stringify(objective),
@@ -279,14 +294,19 @@ export const getProjects = async (): Promise<Project[]> => {
   return apiRequest('/projects');
 };
 
-export const createProject = async (project: ProjectCreate): Promise<Project> => {
+export const createProject = async (
+  project: ProjectCreate
+): Promise<Project> => {
   return apiRequest('/projects', {
     method: 'POST',
     body: JSON.stringify(project),
   });
 };
 
-export const updateProject = async (id: string, project: Partial<Project>): Promise<Project> => {
+export const updateProject = async (
+  id: string,
+  project: Partial<Project>
+): Promise<Project> => {
   return apiRequest(`/projects/${id}`, {
     method: 'PUT',
     body: JSON.stringify(project),
@@ -304,14 +324,19 @@ export const getTasks = async (): Promise<Task[]> => {
   return apiRequest('/tasks');
 };
 
-export const createTask = async (task: Omit<Task, '_id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Task> => {
+export const createTask = async (
+  task: Omit<Task, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Task> => {
   return apiRequest('/tasks', {
     method: 'POST',
     body: JSON.stringify(task),
   });
 };
 
-export const updateTask = async (id: string, task: Partial<Task>): Promise<Task> => {
+export const updateTask = async (
+  id: string,
+  task: Partial<Task>
+): Promise<Task> => {
   return apiRequest(`/tasks/${id}`, {
     method: 'PUT',
     body: JSON.stringify(task),
@@ -329,14 +354,19 @@ export const getHabits = async (): Promise<Habit[]> => {
   return apiRequest('/habits');
 };
 
-export const createHabit = async (habit: Omit<Habit, '_id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Habit> => {
+export const createHabit = async (
+  habit: Omit<Habit, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Habit> => {
   return apiRequest('/habits', {
     method: 'POST',
     body: JSON.stringify(habit),
   });
 };
 
-export const updateHabit = async (id: string, habit: Partial<Habit>): Promise<Habit> => {
+export const updateHabit = async (
+  id: string,
+  habit: Partial<Habit>
+): Promise<Habit> => {
   return apiRequest(`/habits/${id}`, {
     method: 'PUT',
     body: JSON.stringify(habit),
@@ -349,14 +379,20 @@ export const deleteHabit = async (id: string): Promise<void> => {
   });
 };
 
-export const completeHabit = async (id: string, date: string): Promise<Habit> => {
+export const completeHabit = async (
+  id: string,
+  date: string
+): Promise<Habit> => {
   return apiRequest(`/habits/${id}/complete`, {
     method: 'POST',
     body: JSON.stringify({ date }),
   });
 };
 
-export const uncompleteHabit = async (id: string, date: string): Promise<Habit> => {
+export const uncompleteHabit = async (
+  id: string,
+  date: string
+): Promise<Habit> => {
   return apiRequest(`/habits/${id}/uncomplete`, {
     method: 'POST',
     body: JSON.stringify({ date }),
@@ -368,14 +404,19 @@ export const getNotes = async (): Promise<Note[]> => {
   return apiRequest('/notes');
 };
 
-export const createNote = async (note: Omit<Note, '_id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Note> => {
+export const createNote = async (
+  note: Omit<Note, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Note> => {
   return apiRequest('/notes', {
     method: 'POST',
     body: JSON.stringify(note),
   });
 };
 
-export const updateNote = async (id: string, note: Partial<Note>): Promise<Note> => {
+export const updateNote = async (
+  id: string,
+  note: Partial<Note>
+): Promise<Note> => {
   return apiRequest(`/notes/${id}`, {
     method: 'PUT',
     body: JSON.stringify(note),
@@ -405,21 +446,29 @@ export const searchNotes = async (query: string): Promise<Note[]> => {
 };
 
 // Events API
-export const getEvents = async (start?: string, end?: string): Promise<Event[]> => {
+export const getEvents = async (
+  start?: string,
+  end?: string
+): Promise<Event[]> => {
   const params = new URLSearchParams();
   if (start) params.append('start', start);
   if (end) params.append('end', end);
   return apiRequest(`/events?${params.toString()}`);
 };
 
-export const createEvent = async (event: Omit<Event, '_id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Event> => {
+export const createEvent = async (
+  event: Omit<Event, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Event> => {
   return apiRequest('/events', {
     method: 'POST',
     body: JSON.stringify(event),
   });
 };
 
-export const updateEvent = async (id: string, event: Partial<Event>): Promise<Event> => {
+export const updateEvent = async (
+  id: string,
+  event: Partial<Event>
+): Promise<Event> => {
   return apiRequest(`/events/${id}`, {
     method: 'PUT',
     body: JSON.stringify(event),
@@ -432,8 +481,187 @@ export const deleteEvent = async (id: string): Promise<void> => {
   });
 };
 
-export const updateEventStatus = async (id: string, status: Event['status']): Promise<Event> => {
+export const updateEventStatus = async (
+  id: string,
+  status: Event['status']
+): Promise<Event> => {
   return apiRequest(`/events/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  });
+};
+
+// Structure-scoped Notes API
+export const getStructureNotes = async (
+  structureId: string
+): Promise<Note[]> => {
+  return apiRequest(`/structures/${structureId}/notes`);
+};
+
+export const createStructureNote = async (
+  structureId: string,
+  note: Omit<Note, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Note> => {
+  return apiRequest(`/structures/${structureId}/notes`, {
+    method: 'POST',
+    body: JSON.stringify(note),
+  });
+};
+
+export const updateStructureNote = async (
+  structureId: string,
+  id: string,
+  note: Partial<Note>
+): Promise<Note> => {
+  return apiRequest(`/structures/${structureId}/notes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(note),
+  });
+};
+
+export const deleteStructureNote = async (
+  structureId: string,
+  id: string
+): Promise<void> => {
+  return apiRequest(`/structures/${structureId}/notes/${id}`, {
+    method: 'DELETE',
+  });
+};
+
+export const toggleStructureNoteFavorite = async (
+  structureId: string,
+  id: string
+): Promise<Note> => {
+  return apiRequest(`/structures/${structureId}/notes/${id}/favorite`, {
+    method: 'PUT',
+  });
+};
+
+export const toggleStructureNotePinned = async (
+  structureId: string,
+  id: string
+): Promise<Note> => {
+  return apiRequest(`/structures/${structureId}/notes/${id}/pin`, {
+    method: 'PUT',
+  });
+};
+
+export const searchStructureNotes = async (
+  structureId: string,
+  query: string
+): Promise<Note[]> => {
+  return apiRequest(
+    `/structures/${structureId}/notes/search?q=${encodeURIComponent(query)}`
+  );
+};
+
+// Structure-scoped Habits API
+export const getStructureHabits = async (
+  structureId: string
+): Promise<Habit[]> => {
+  return apiRequest(`/structures/${structureId}/habits`);
+};
+
+export const createStructureHabit = async (
+  structureId: string,
+  habit: Omit<Habit, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Habit> => {
+  return apiRequest(`/structures/${structureId}/habits`, {
+    method: 'POST',
+    body: JSON.stringify(habit),
+  });
+};
+
+export const updateStructureHabit = async (
+  structureId: string,
+  id: string,
+  habit: Partial<Habit>
+): Promise<Habit> => {
+  return apiRequest(`/structures/${structureId}/habits/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(habit),
+  });
+};
+
+export const deleteStructureHabit = async (
+  structureId: string,
+  id: string
+): Promise<void> => {
+  return apiRequest(`/structures/${structureId}/habits/${id}`, {
+    method: 'DELETE',
+  });
+};
+
+export const completeStructureHabit = async (
+  structureId: string,
+  id: string,
+  date: string
+): Promise<Habit> => {
+  return apiRequest(`/structures/${structureId}/habits/${id}/complete`, {
+    method: 'POST',
+    body: JSON.stringify({ date }),
+  });
+};
+
+export const uncompleteStructureHabit = async (
+  structureId: string,
+  id: string,
+  date: string
+): Promise<Habit> => {
+  return apiRequest(`/structures/${structureId}/habits/${id}/uncomplete`, {
+    method: 'POST',
+    body: JSON.stringify({ date }),
+  });
+};
+
+// Structure-scoped Events API
+export const getStructureEvents = async (
+  structureId: string,
+  start?: string,
+  end?: string
+): Promise<Event[]> => {
+  const params = new URLSearchParams();
+  if (start) params.append('start', start);
+  if (end) params.append('end', end);
+  return apiRequest(`/structures/${structureId}/events?${params.toString()}`);
+};
+
+export const createStructureEvent = async (
+  structureId: string,
+  event: Omit<Event, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Event> => {
+  return apiRequest(`/structures/${structureId}/events`, {
+    method: 'POST',
+    body: JSON.stringify(event),
+  });
+};
+
+export const updateStructureEvent = async (
+  structureId: string,
+  id: string,
+  event: Partial<Event>
+): Promise<Event> => {
+  return apiRequest(`/structures/${structureId}/events/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(event),
+  });
+};
+
+export const deleteStructureEvent = async (
+  structureId: string,
+  id: string
+): Promise<void> => {
+  return apiRequest(`/structures/${structureId}/events/${id}`, {
+    method: 'DELETE',
+  });
+};
+
+export const updateStructureEventStatus = async (
+  structureId: string,
+  id: string,
+  status: Event['status']
+): Promise<Event> => {
+  return apiRequest(`/structures/${structureId}/events/${id}/status`, {
     method: 'PUT',
     body: JSON.stringify({ status }),
   });
@@ -471,21 +699,30 @@ export interface GoalProgressSummary {
   avgProgressPercent: number;
 }
 // Progress endpoints
-export const getProjectsWithTaskProgress = async (): Promise<ProjectWithProgress[]> => {
+export const getProjectsWithTaskProgress = async (): Promise<
+  ProjectWithProgress[]
+> => {
   return apiRequest('/projects/with-task-progress');
 };
-export const getProjectProgressSummary = async (): Promise<ProjectProgressSummary> => {
-  return apiRequest('/projects/progress-summary');
-};
-export const getObjectivesWithProjectProgress = async (): Promise<ObjectiveWithProgress[]> => {
+export const getProjectProgressSummary =
+  async (): Promise<ProjectProgressSummary> => {
+    return apiRequest('/projects/progress-summary');
+  };
+export const getObjectivesWithProjectProgress = async (): Promise<
+  ObjectiveWithProgress[]
+> => {
   return apiRequest('/objectives/with-project-progress');
 };
-export const getObjectiveProgressSummary = async (): Promise<ObjectiveProgressSummary> => {
-  return apiRequest('/objectives/progress-summary');
-};
-export const getGoalsWithObjectiveProgress = async (): Promise<GoalWithProgress[]> => {
+export const getObjectiveProgressSummary =
+  async (): Promise<ObjectiveProgressSummary> => {
+    return apiRequest('/objectives/progress-summary');
+  };
+export const getGoalsWithObjectiveProgress = async (): Promise<
+  GoalWithProgress[]
+> => {
   return apiRequest('/goals/with-objective-progress');
 };
-export const getGoalProgressSummary = async (): Promise<GoalProgressSummary> => {
-  return apiRequest('/goals/progress-summary');
-};
+export const getGoalProgressSummary =
+  async (): Promise<GoalProgressSummary> => {
+    return apiRequest('/goals/progress-summary');
+  };
