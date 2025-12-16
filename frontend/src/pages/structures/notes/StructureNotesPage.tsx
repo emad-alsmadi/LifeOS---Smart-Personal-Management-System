@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import NoteModal from './NoteModal';
-import NotesView from '../../components/features/notes/NotesView';
+import { useParams } from 'react-router-dom';
+import NoteModal from '../../notes/NoteModal';
+import NotesView from '../../../components/features/notes/NotesView';
 import {
-  getNotes,
-  createNote,
-  updateNote,
-  deleteNote,
-  toggleNoteFavorite,
+  getStructureNotes,
+  createStructureNote,
+  updateStructureNote,
+  deleteStructureNote,
+  toggleStructureNoteFavorite,
   Note,
-} from '../../lib/api/api';
+} from '../../../lib/api/api';
 
-const NotesPage: React.FC = () => {
+const StructureNotesPage: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -19,6 +20,7 @@ const NotesPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { structureId } = useParams();
 
   const categories = [
     'Work',
@@ -31,7 +33,7 @@ const NotesPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [structureId]);
 
   useEffect(() => {
     filterNotes();
@@ -40,8 +42,12 @@ const NotesPage: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const notesData = await getNotes();
-      setNotes(notesData);
+      if (!structureId) {
+        setNotes([]);
+      } else {
+        const notesData = await getStructureNotes(structureId);
+        setNotes(notesData);
+      }
     } catch (error) {
       console.error('Failed to load notes:', error);
     } finally {
@@ -76,7 +82,8 @@ const NotesPage: React.FC = () => {
   const handleDelete = async (note: Note) => {
     if (window.confirm('Are you sure you want to delete this note?')) {
       try {
-        await deleteNote(note._id);
+        if (!structureId) return;
+        await deleteStructureNote(structureId, note._id);
         await loadData();
       } catch (error) {
         console.error('Failed to delete note:', error);
@@ -88,10 +95,11 @@ const NotesPage: React.FC = () => {
     noteData: Omit<Note, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
   ) => {
     try {
+      if (!structureId) return;
       if (editingNote) {
-        await updateNote(editingNote._id, noteData);
+        await updateStructureNote(structureId, editingNote._id, noteData);
       } else {
-        await createNote(noteData);
+        await createStructureNote(structureId, noteData);
       }
       setModalOpen(false);
       await loadData();
@@ -102,7 +110,8 @@ const NotesPage: React.FC = () => {
 
   const handleToggleFavorite = async (note: Note) => {
     try {
-      await toggleNoteFavorite(note._id);
+      if (!structureId) return;
+      await toggleStructureNoteFavorite(structureId, note._id);
       await loadData();
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
@@ -131,6 +140,7 @@ const NotesPage: React.FC = () => {
         categoryFilter={categoryFilter}
         showFavoritesOnly={showFavoritesOnly}
         stats={stats}
+        loading={loading}
         onCreate={handleCreate}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -154,4 +164,4 @@ const NotesPage: React.FC = () => {
   );
 };
 
-export default NotesPage;
+export default StructureNotesPage;

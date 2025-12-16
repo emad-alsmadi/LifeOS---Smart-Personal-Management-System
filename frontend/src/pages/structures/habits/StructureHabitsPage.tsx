@@ -1,26 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { Plus, Repeat, TrendingUp, CheckCircle, Flame } from 'lucide-react';
-import HabitModal from '../habits/HabitModal';
-import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
-import { Badge } from '../../components/ui/badge';
+import HabitModal from '../../habits/HabitModal';
+import Button from '../../../components/ui/Button';
+import Card from '../../../components/ui/Card';
+import { Badge } from '../../../components/ui/badge';
 import {
-  getHabits,
-  createHabit,
-  updateHabit,
-  deleteHabit,
+  getStructureHabits,
+  createStructureHabit,
+  updateStructureHabit,
+  deleteStructureHabit,
   Habit,
-  completeHabit,
-  uncompleteHabit,
-} from '../../lib/api/api';
+  completeStructureHabit,
+  uncompleteStructureHabit,
+} from '../../../lib/api/api';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../../components/ui/dialog';
+} from '../../../components/ui/dialog';
 
 const StructureHabitsPage: React.FC = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -29,16 +30,21 @@ const StructureHabitsPage: React.FC = () => {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
+  const { structureId } = useParams();
 
   useEffect(() => {
     loadHabits();
-  }, []);
+  }, [structureId]);
 
   const loadHabits = async () => {
     try {
       setLoading(true);
-      const data = await getHabits();
-      setHabits(data);
+      if (!structureId) {
+        setHabits([]);
+      } else {
+        const data = await getStructureHabits(structureId);
+        setHabits(data);
+      }
     } catch (error) {
       console.error('Failed to load habits:', error);
     } finally {
@@ -64,7 +70,8 @@ const StructureHabitsPage: React.FC = () => {
   const confirmDelete = async () => {
     if (!habitToDelete) return;
     try {
-      await deleteHabit(habitToDelete._id);
+      if (!structureId) return;
+      await deleteStructureHabit(structureId, habitToDelete._id);
       setDeleteDialogOpen(false);
       setHabitToDelete(null);
       await loadHabits();
@@ -77,10 +84,11 @@ const StructureHabitsPage: React.FC = () => {
     habitData: Omit<Habit, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
     try {
+      if (!structureId) return;
       if (editingHabit) {
-        await updateHabit(editingHabit._id, habitData);
+        await updateStructureHabit(structureId, editingHabit._id, habitData);
       } else {
-        await createHabit(habitData);
+        await createStructureHabit(structureId, habitData);
       }
       setModalOpen(false);
       await loadHabits();
@@ -94,10 +102,11 @@ const StructureHabitsPage: React.FC = () => {
     const isCompleted = completedDates.includes(date);
 
     try {
+      if (!structureId) return;
       if (isCompleted) {
-        await uncompleteHabit(habit._id, date);
+        await uncompleteStructureHabit(structureId, habit._id, date);
       } else {
-        await completeHabit(habit._id, date);
+        await completeStructureHabit(structureId, habit._id, date);
       }
       await loadHabits();
     } catch (error) {
@@ -309,7 +318,6 @@ const StructureHabitsPage: React.FC = () => {
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {habits.map((habit, index) => {
               const streak = getStreakCount(habit);
-              const completionRate = getCompletionRate(habit);
               const isCompletedToday =
                 habit.completedDates?.includes(today) || false;
 
@@ -320,10 +328,7 @@ const StructureHabitsPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card
-                    className='p-6 rounded-xl shadow-md bg-gradient-to-br from-white to-green-50 border-2 border-green-100 hover:border-green-300 hover:shadow-2xl transition-all duration-300'
-                    hover
-                  >
+                  <Card className='p-6 rounded-xl shadow-md bg-gradient-to-br from-white to-green-50 border-2 border-green-100 hover:border-green-300 hover:shadow-2xl transition-all duration-300'>
                     {/* Header */}
                     <div className='flex items-start justify-between mb-4'>
                       <div className='flex items-center space-x-3'>

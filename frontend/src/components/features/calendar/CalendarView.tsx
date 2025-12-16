@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Calendar as CalendarIcon,
@@ -8,230 +8,44 @@ import {
   Clock,
   Users,
 } from 'lucide-react';
-import CalendarEventModal from '../calendar/CalendarEventModal';
-import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
+import Button from '../../ui/Button';
+import Card from '../../ui/Card';
+import type { Event } from '../../../lib/api/api';
 
-import {
-  getEvents,
-  getTasks,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-  Event,
-  Task,
-} from '../../lib/api/api';
-
-// Simple date utility functions
-const startOfMonth = (date: Date) => {
-  // Use UTC methods to avoid timezone issues
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+type Stats = {
+  totalEvents: number;
+  taskEvents: number;
+  regularEvents: number;
+  todayEvents: number;
 };
 
-const endOfMonth = (date: Date) => {
-  // Use UTC methods to avoid timezone issues
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0));
-};
+interface Props {
+  displayMonth: string;
+  calendarDays: Date[];
+  stats: Stats;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+  onAddEvent: () => void;
+  onDateClick: (date: Date) => void;
+  onEventClick: (event: Event) => void;
+  eventsForDate: (date: Date) => Event[];
+  getEventTypeColor: (type: Event['type']) => string;
+  isSameDay: (a: Date, b: Date) => boolean;
+}
 
-const eachDayOfInterval = (start: Date, end: Date) => {
-  const days = [];
-  const current = new Date(start);
-  while (current <= end) {
-    days.push(new Date(current));
-    current.setUTCDate(current.getUTCDate() + 1);
-  }
-  return days;
-};
-
-const isSameMonth = (date1: Date, date2: Date) => {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth()
-  );
-};
-
-const isSameDay = (date1: Date, date2: Date) => {
-  // Simple date comparison using local date components
-  const getDateString = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
-  };
-
-  const date1String = getDateString(date1);
-  const date2String = getDateString(date2);
-
-  console.log('isSameDay comparison:', {
-    date1: date1.toISOString(),
-    date2: date2.toISOString(),
-    date1String,
-    date2String,
-    isSame: date1String === date2String,
-  });
-
-  return date1String === date2String;
-};
-
-const addMonths = (date: Date, months: number) => {
-  const result = new Date(date);
-  result.setMonth(result.getMonth() + months);
-  return result;
-};
-
-const subMonths = (date: Date, months: number) => {
-  return addMonths(date, -months);
-};
-
-const format = (date: Date, formatStr: string) => {
-  if (formatStr === 'MMMM yyyy') {
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  }
-  if (formatStr === 'd') {
-    // Use UTC date to avoid timezone issues
-    return date.getUTCDate().toString();
-  }
-  return date.toLocaleDateString();
-};
-
-const StructureCalendarPage: React.FC = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<Event[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Debug effect to log events when they change
-  useEffect(() => {
-    console.log('Events state updated:', events);
-  }, [events]);
-
-  const loadData = async () => {
-    try {
-      console.log('Loading calendar data...');
-      const [eventsData, tasksData] = await Promise.all([
-        getEvents(),
-        getTasks(),
-      ]);
-      console.log('Loaded events:', eventsData);
-      setEvents(eventsData);
-      setTasks(tasksData);
-    } catch (error) {
-      console.error('Failed to load calendar data:', error);
-    }
-  };
-
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    setEditingEvent(null);
-    setModalOpen(true);
-  };
-
-  const handleEventClick = (event: Event) => {
-    setEditingEvent(event);
-    setSelectedDate(new Date(event.startDate));
-    setModalOpen(true);
-  };
-
-  const handleSave = async (
-    eventData: Omit<Event, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
-  ) => {
-    try {
-      console.log('Saving event with data:', eventData);
-
-      if (editingEvent) {
-        await updateEvent(editingEvent._id, eventData);
-      } else {
-        const newEvent = await createEvent(eventData);
-        console.log('Created new event:', newEvent);
-      }
-
-      setModalOpen(false);
-      console.log('Reloading data...');
-      await loadData();
-
-      // Force a re-render by updating currentDate slightly
-      setCurrentDate((prev) => new Date(prev.getTime()));
-    } catch (error) {
-      console.error('Failed to save event:', error);
-    }
-  };
-
-  const handleDelete = async (event: Event) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
-      try {
-        await deleteEvent(event._id);
-        await loadData();
-      } catch (error) {
-        console.error('Failed to delete event:', error);
-      }
-    }
-  };
-
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const calendarDays = eachDayOfInterval(monthStart, monthEnd);
-
-  console.log('Calendar month range:', {
-    currentDate: currentDate.toISOString(),
-    monthStart: monthStart.toISOString(),
-    monthEnd: monthEnd.toISOString(),
-    calendarDaysCount: calendarDays.length,
-  });
-
-  const getEventsForDate = (date: Date) => {
-    const eventsForDate = events.filter((event) => {
-      const eventDate = new Date(event.startDate);
-      const isSame = isSameDay(eventDate, date);
-
-      // Debug logging only when there are events to compare
-      if (events.length > 0) {
-        console.log('Event date comparison:', {
-          eventTitle: event.title,
-          eventDate: event.startDate,
-          eventDateObj: eventDate.toISOString(),
-          calendarDate: date.toISOString(),
-          isSame: isSame,
-        });
-      }
-
-      return isSame;
-    });
-
-    return eventsForDate;
-  };
-
-  const getEventTypeColor = (type: Event['type']) => {
-    return type === 'Task'
-      ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200'
-      : 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200';
-  };
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate((prev) =>
-      direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1)
-    );
-  };
-
-  const getCalendarStats = () => {
-    const totalEvents = events.length;
-    const taskEvents = events.filter((e) => e.type === 'Task').length;
-    const regularEvents = events.filter((e) => e.type !== 'Task').length;
-    const todayEvents = events.filter((e) =>
-      isSameDay(new Date(e.startDate), new Date())
-    ).length;
-
-    return { totalEvents, taskEvents, regularEvents, todayEvents };
-  };
-
-  const stats = getCalendarStats();
-
+const CalendarView: React.FC<Props> = ({
+  displayMonth,
+  calendarDays,
+  stats,
+  onPrevMonth,
+  onNextMonth,
+  onAddEvent,
+  onDateClick,
+  onEventClick,
+  eventsForDate,
+  getEventTypeColor,
+  isSameDay,
+}) => {
   return (
     <>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -257,7 +71,7 @@ const StructureCalendarPage: React.FC = () => {
               </p>
             </div>
             <Button
-              onClick={() => handleDateClick(new Date())}
+              onClick={onAddEvent}
               className='bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'
               size='lg'
             >
@@ -367,20 +181,18 @@ const StructureCalendarPage: React.FC = () => {
             <Button
               variant='outline'
               size='sm'
-              onClick={() => navigateMonth('prev')}
+              onClick={onPrevMonth}
               className='border-purple-200 text-purple-600 hover:bg-purple-50'
             >
               <ChevronLeft className='w-4 h-4' />
             </Button>
-
             <h2 className='text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'>
-              {format(currentDate, 'MMMM yyyy')}
+              {displayMonth}
             </h2>
-
             <Button
               variant='outline'
               size='sm'
-              onClick={() => navigateMonth('next')}
+              onClick={onNextMonth}
               className='border-purple-200 text-purple-600 hover:bg-purple-50'
             >
               <ChevronRight className='w-4 h-4' />
@@ -411,9 +223,11 @@ const StructureCalendarPage: React.FC = () => {
               {/* Calendar days */}
               <div className='grid grid-cols-7'>
                 {calendarDays.map((day, index) => {
-                  const dayEvents = getEventsForDate(day);
+                  const dayEvents = eventsForDate(day);
                   const isToday = isSameDay(day, new Date());
-                  const isCurrentMonth = isSameMonth(day, currentDate);
+                  const isCurrentMonth =
+                    day.getFullYear() === calendarDays[0].getFullYear() &&
+                    day.getMonth() === calendarDays[0].getMonth();
 
                   return (
                     <motion.div
@@ -434,7 +248,7 @@ const StructureCalendarPage: React.FC = () => {
                             : ''
                         }
                       `}
-                      onClick={() => handleDateClick(day)}
+                      onClick={() => onDateClick(day)}
                     >
                       <div
                         className={`
@@ -442,13 +256,11 @@ const StructureCalendarPage: React.FC = () => {
                         ${
                           isToday
                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                            : isCurrentMonth
-                            ? 'text-gray-900 hover:bg-purple-100'
-                            : 'text-gray-400'
+                            : 'text-gray-900 hover:bg-purple-100'
                         }
                       `}
                       >
-                        {format(day, 'd')}
+                        {day.getUTCDate().toString()}
                       </div>
 
                       <div className='space-y-1'>
@@ -458,7 +270,7 @@ const StructureCalendarPage: React.FC = () => {
                             whileHover={{ scale: 1.02 }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEventClick(event);
+                              onEventClick(event);
                             }}
                             className={`
                               text-xs p-2 rounded-md cursor-pointer truncate font-medium
@@ -511,19 +323,8 @@ const StructureCalendarPage: React.FC = () => {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Event Modal */}
-      <CalendarEventModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave}
-        onDelete={editingEvent ? () => handleDelete(editingEvent) : undefined}
-        event={editingEvent}
-        selectedDate={selectedDate}
-        tasks={tasks}
-      />
     </>
   );
 };
 
-export default StructureCalendarPage;
+export default CalendarView;

@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import CalendarEventModal from './CalendarEventModal';
-import CalendarView from '../../components/features/calendar/CalendarView';
+import { useParams } from 'react-router-dom';
+import CalendarEventModal from '../../calendar/CalendarEventModal';
+import CalendarView from '../../../components/features/calendar/CalendarView';
 
 import {
-  getEvents,
+  getStructureEvents,
+  createStructureEvent,
+  updateStructureEvent,
+  deleteStructureEvent,
   getTasks,
-  createEvent,
-  updateEvent,
-  deleteEvent,
   Event,
   Task,
-} from '../../lib/api/api';
+} from '../../../lib/api/api';
 
 // Simple date utility functions
 const startOfMonth = (date: Date) => {
@@ -78,17 +79,18 @@ const format = (date: Date, formatStr: string) => {
   return date.toLocaleDateString();
 };
 
-const CalendarPage: React.FC = () => {
+const StructureCalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<Event[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const { structureId } = useParams();
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [structureId]);
 
   // Debug effect to log events when they change
   useEffect(() => {
@@ -98,13 +100,15 @@ const CalendarPage: React.FC = () => {
   const loadData = async () => {
     try {
       console.log('Loading calendar data...');
-      const [eventsData, tasksData] = await Promise.all([
-        getEvents(),
-        getTasks(),
-      ]);
-      console.log('Loaded events:', eventsData);
-      setEvents(eventsData);
+      const tasksData = await getTasks();
       setTasks(tasksData);
+      if (!structureId) {
+        setEvents([]);
+      } else {
+        const eventsData = await getStructureEvents(structureId);
+        console.log('Loaded events:', eventsData);
+        setEvents(eventsData);
+      }
     } catch (error) {
       console.error('Failed to load calendar data:', error);
     }
@@ -127,11 +131,11 @@ const CalendarPage: React.FC = () => {
   ) => {
     try {
       console.log('Saving event with data:', eventData);
-
+      if (!structureId) return;
       if (editingEvent) {
-        await updateEvent(editingEvent._id, eventData);
+        await updateStructureEvent(structureId, editingEvent._id, eventData);
       } else {
-        const newEvent = await createEvent(eventData);
+        const newEvent = await createStructureEvent(structureId, eventData);
         console.log('Created new event:', newEvent);
       }
 
@@ -149,7 +153,8 @@ const CalendarPage: React.FC = () => {
   const handleDelete = async (event: Event) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
-        await deleteEvent(event._id);
+        if (!structureId) return;
+        await deleteStructureEvent(structureId, event._id);
         await loadData();
       } catch (error) {
         console.error('Failed to delete event:', error);
@@ -245,4 +250,4 @@ const CalendarPage: React.FC = () => {
   );
 };
 
-export default CalendarPage;
+export default StructureCalendarPage;

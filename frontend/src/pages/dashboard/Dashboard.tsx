@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Target,
   Calendar,
   CheckCircle,
   FolderOpen,
-  Star,
   StickyNote,
-  LayoutDashboard,
   Activity,
   Eye,
   Plus,
@@ -18,8 +16,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 
 import {
   getProjects,
@@ -44,22 +42,22 @@ import {
   Habit,
   completeHabit,
   uncompleteHabit,
-} from '../lib/api/api';
-import ProjectModal from './projects/ProjectModal';
-import TaskModal from './tasks/TaskModal';
-import NoteModal from './notes/NoteModal';
-import CalendarEventModal from './calendar/CalendarEventModal';
-import ActiveTasksSection from '../components/dashboard/ActiveTasksSection';
-import HighlightedNotesSection from '../components/dashboard/HighlightedNotesSection';
-import SuccessToast from '../components/dashboard/SuccessToast';
+} from '../../lib/api/api';
+import ProjectModal from '../projects/ProjectModal';
+import TaskModal from '../tasks/TaskModal';
+import NoteModal from '../notes/NoteModal';
+import CalendarEventModal from '../calendar/CalendarEventModal';
+import ActiveTasksSection from '../../components/dashboard/ActiveTasksSection';
+import HighlightedNotesSection from '../../components/dashboard/HighlightedNotesSection';
+import SuccessToast from '../../components/dashboard/SuccessToast';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../components/ui/dialog';
-import TaskCalendarModal from './tasks/TaskCalendarModal';
+} from '../../components/ui/dialog';
+import TaskCalendarModal from '../tasks/TaskCalendarModal';
 
 const ActionZone: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -286,7 +284,7 @@ const ActionZone: React.FC = () => {
   // Handler functions for ActionZone
   const handleTaskComplete = async (taskId: string) => {
     try {
-      await import('../lib/api/api').then(async (api) => {
+      await import('../../lib/api/api').then(async (api) => {
         const task = tasks.find((t) => t._id === taskId);
         if (task) {
           await api.updateTask(taskId, { ...task, status: 'Completed' });
@@ -1796,7 +1794,7 @@ const ActionZone: React.FC = () => {
                             </div>
                             <span
                               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                                objective.status === 'Achieved'
+                                objective.status === 'Completed'
                                   ? 'bg-green-100 text-green-700'
                                   : objective.status === 'Active'
                                   ? 'bg-blue-100 text-blue-700'
@@ -1959,7 +1957,7 @@ const ActionZone: React.FC = () => {
                     <div className='flex items-center space-x-2 mt-2'>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          detailsObjective?.status === 'Achieved'
+                          detailsObjective?.status === 'Completed'
                             ? 'bg-green-100 text-green-700'
                             : detailsObjective?.status === 'Active'
                             ? 'bg-blue-100 text-blue-700'
@@ -1992,7 +1990,7 @@ const ActionZone: React.FC = () => {
                       Description
                     </h3>
                     <p className='text-gray-700'>
-                      {detailsObjective.description}
+                      {detailsObjective?.description}
                     </p>
                   </div>
                 )}

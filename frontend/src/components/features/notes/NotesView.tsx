@@ -1,139 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus, FileText, Tag, Star, BookOpen } from 'lucide-react';
-import NoteModal from '../notes/NoteModal';
-import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
-
-import { Badge } from '../../components/ui/badge';
+import Button from '../../ui/Button';
+import Card from '../../ui/Card';
+import { Badge } from '../../ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
-import {
-  getNotes,
-  createNote,
-  updateNote,
-  deleteNote,
-  toggleNoteFavorite,
-  Note,
-} from '../../lib/api/api';
+} from '../../ui/select';
+import type { Note } from '../../../lib/api/api';
 
-const StructureNotesPage: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState<Note | null>(null);
+type Stats = {
+  totalNotes: number;
+  favoriteNotes: number;
+  categoryCounts: Record<string, number>;
+};
 
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [loading, setLoading] = useState(true);
+interface Props {
+  notes: Note[];
+  filteredNotes: Note[];
+  categories: string[];
+  categoryFilter: string;
+  showFavoritesOnly: boolean;
+  stats: Stats;
+  loading?: boolean;
+  onCreate: () => void;
+  onEdit: (note: Note) => void;
+  onDelete: (note: Note) => void;
+  onToggleFavorite: (note: Note) => void;
+  onChangeCategoryFilter: (value: string) => void;
+  onToggleFavoritesFilter: () => void;
+  onClearFilters: () => void;
+}
 
-  const categories = [
-    'Work',
-    'Personal',
-    'Ideas',
-    'Recipes',
-    'Travel',
-    'Learning',
-  ];
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    filterNotes();
-  }, [notes, categoryFilter, showFavoritesOnly]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const notesData = await getNotes();
-      setNotes(notesData);
-    } catch (error) {
-      console.error('Failed to load notes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterNotes = () => {
-    let filtered = [...notes];
-
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter((note) => note.category === categoryFilter);
-    }
-
-    if (showFavoritesOnly) {
-      filtered = filtered.filter((note) => note.isFavorite);
-    }
-
-    setFilteredNotes(filtered);
-  };
-
-  const handleCreate = () => {
-    setEditingNote(null);
-    setModalOpen(true);
-  };
-
-  const handleEdit = (note: Note) => {
-    setEditingNote(note);
-    setModalOpen(true);
-  };
-
-  const handleDelete = async (note: Note) => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      try {
-        await deleteNote(note._id);
-        await loadData();
-      } catch (error) {
-        console.error('Failed to delete note:', error);
-      }
-    }
-  };
-
-  const handleSave = async (
-    noteData: Omit<Note, '_id' | 'userId' | 'createdAt' | 'updatedAt'>
-  ) => {
-    try {
-      if (editingNote) {
-        await updateNote(editingNote._id, noteData);
-      } else {
-        await createNote(noteData);
-      }
-      setModalOpen(false);
-      await loadData();
-    } catch (error) {
-      console.error('Failed to save note:', error);
-    }
-  };
-
-  const handleToggleFavorite = async (note: Note) => {
-    try {
-      await toggleNoteFavorite(note._id);
-      await loadData();
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
-    }
-  };
-
-  const getNotesStats = () => {
-    const totalNotes = notes.length;
-    const favoriteNotes = notes.filter((n) => n.isFavorite).length;
-    const categoryCounts = categories.reduce((acc, category) => {
-      acc[category] = notes.filter((n) => n.category === category).length;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return { totalNotes, favoriteNotes, categoryCounts };
-  };
-
-  const stats = getNotesStats();
-
+const NotesView: React.FC<Props> = ({
+  notes,
+  filteredNotes,
+  categories,
+  categoryFilter,
+  showFavoritesOnly,
+  stats,
+  onCreate,
+  onEdit,
+  onDelete,
+  onToggleFavorite,
+  onChangeCategoryFilter,
+  onToggleFavoritesFilter,
+  onClearFilters,
+}) => {
   return (
     <>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -142,7 +59,6 @@ const StructureNotesPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className='space-y-8'
         >
-          {/* Header */}
           <div className='flex justify-between items-center'>
             <div>
               <div className='flex items-center space-x-3 mb-2'>
@@ -159,7 +75,7 @@ const StructureNotesPage: React.FC = () => {
               </p>
             </div>
             <Button
-              onClick={handleCreate}
+              onClick={onCreate}
               className='bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'
               size='lg'
             >
@@ -168,7 +84,6 @@ const StructureNotesPage: React.FC = () => {
             </Button>
           </div>
 
-          {/* Stats Cards */}
           <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -259,7 +174,6 @@ const StructureNotesPage: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Search and Filters */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -272,14 +186,13 @@ const StructureNotesPage: React.FC = () => {
                   Filter:
                 </span>
               </div>
-
               <div className='flex items-center space-x-2'>
                 <label className='text-sm font-medium text-gray-600'>
                   Category:
                 </label>
                 <Select
                   value={categoryFilter}
-                  onValueChange={setCategoryFilter}
+                  onValueChange={onChangeCategoryFilter}
                 >
                   <SelectTrigger className='w-40 border-amber-200 focus:border-amber-500'>
                     <SelectValue />
@@ -297,11 +210,10 @@ const StructureNotesPage: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <Button
                 variant={showFavoritesOnly ? 'primary' : 'outline'}
                 size='sm'
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                onClick={onToggleFavoritesFilter}
                 className={
                   showFavoritesOnly
                     ? 'bg-pink-500 hover:bg-pink-600 text-white'
@@ -311,15 +223,11 @@ const StructureNotesPage: React.FC = () => {
                 <Star className='w-4 h-4 mr-2' />
                 Favorites Only
               </Button>
-
               {(categoryFilter !== 'all' || showFavoritesOnly) && (
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => {
-                    setCategoryFilter('all');
-                    setShowFavoritesOnly(false);
-                  }}
+                  onClick={onClearFilters}
                   className='border-amber-200 text-amber-600 hover:bg-amber-50'
                 >
                   Clear All
@@ -328,7 +236,6 @@ const StructureNotesPage: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Notes Grid */}
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {filteredNotes.map((note, index) => (
               <motion.div
@@ -352,7 +259,7 @@ const StructureNotesPage: React.FC = () => {
                         </Badge>
                       </div>
                       <button
-                        onClick={() => handleToggleFavorite(note)}
+                        onClick={() => onToggleFavorite(note)}
                         className={`p-1 rounded-full transition-colors ${
                           note.isFavorite
                             ? 'text-pink-500 hover:text-pink-600'
@@ -391,7 +298,7 @@ const StructureNotesPage: React.FC = () => {
                       <Button
                         variant='ghost'
                         size='sm'
-                        onClick={() => handleEdit(note)}
+                        onClick={() => onEdit(note)}
                         className='text-amber-600 hover:text-amber-700 hover:bg-amber-100'
                       >
                         Edit
@@ -399,7 +306,7 @@ const StructureNotesPage: React.FC = () => {
                       <Button
                         variant='ghost'
                         size='sm'
-                        onClick={() => handleDelete(note)}
+                        onClick={() => onDelete(note)}
                         className='text-red-500 hover:text-red-700 hover:bg-red-100'
                       >
                         Delete
@@ -410,7 +317,6 @@ const StructureNotesPage: React.FC = () => {
               </motion.div>
             ))}
 
-            {/* Empty State */}
             {filteredNotes.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -422,17 +328,14 @@ const StructureNotesPage: React.FC = () => {
                     <FileText className='w-8 h-8 text-amber-600' />
                   </div>
                   <h3 className='text-xl font-bold text-gray-900 mb-2'>
-                    {categoryFilter !== 'all' || showFavoritesOnly
-                      ? 'No notes match your filters'
-                      : 'No notes yet'}
+                    No notes yet
                   </h3>
                   <p className='text-gray-600 mb-6 max-w-md mx-auto'>
-                    {categoryFilter !== 'all' || showFavoritesOnly
-                      ? "Try adjusting your filters to find what you're looking for."
-                      : 'Start capturing your thoughts and ideas by creating your first note.'}
+                    Start capturing your thoughts and ideas by creating your
+                    first note.
                   </p>
                   <Button
-                    onClick={handleCreate}
+                    onClick={onCreate}
                     className='bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
                   >
                     <Plus className='w-4 h-4 mr-2' />
@@ -444,17 +347,8 @@ const StructureNotesPage: React.FC = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* Modal */}
-      <NoteModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave as any}
-        note={editingNote as any}
-        categories={categories}
-      />
     </>
   );
 };
 
-export default StructureNotesPage;
+export default NotesView;
