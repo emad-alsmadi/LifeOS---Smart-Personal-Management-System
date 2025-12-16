@@ -11,6 +11,7 @@ import {
 import { Link } from 'react-router-dom';
 import { NavigationItem, Structure } from '../../hooks/useAuthLayout';
 import NavigationMenu from './NavigationMenu';
+import Tooltip from '../ui/tooltip';
 
 export interface SidebarProps {
   collapsed: boolean;
@@ -85,33 +86,45 @@ const Sidebar: React.FC<SidebarProps> = ({
             />
 
             {/* Structures under Action Zone */}
-            <div className={`mt-2 ${collapsed ? 'px-0' : 'px-2'} space-y-2`}>
-              <div className='border border-gray-200 rounded-xl overflow-hidden'>
+
+            <Tooltip placement='right'>
+              {' '}
+              <div className='overflow-hidden'>
                 <button
-                  className={`w-full flex items-center ${
-                    collapsed ? 'justify-center' : 'justify-between'
-                  } px-3 py-3 text-sm font-semibold hover:bg-gray-50`}
+                  className={`
+                  group flex items-center mb-2 px-4 py-3.5 rounded-2xl transition-all duration-300 font-medium
+                  ${collapsed ? 'justify-cente' : 'justify-start'}
+                  ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-700 border border-primary-200 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-100/80 hover:text-primary-600'
+                  }
+                `}
                   onClick={() => setHierarchyExpanded((v) => !v)}
                 >
-                  <div className='flex items-center gap-2'>
-                    <Layers className='w-4 h-4 text-primary-600' />
-                    {!collapsed && <span>Hierarchy</span>}
+                  <div className='flex justify-between items-center w-full gap-[65px]'>
+                    {' '}
+                    <div className='flex items-center justify-between w-full gap-2'>
+                      <Layers className='w-4 h-4 text-primary-600' />
+                      {!collapsed && <span>Hierarchy</span>}
+                    </div>
+                    {!collapsed && (
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          hierarchyExpanded ? 'rotate-180' : ''
+                        }flex-shrink-0 w-5 h-5 transition-all duration-300 ${
+                          collapsed ? '' : 'mr-3'
+                        } ${
+                          isActive
+                            ? 'text-primary-600'
+                            : 'text-gray-500 group-hover:text-primary-600'
+                        }`}
+                      />
+                    )}
                   </div>
-                  {!collapsed && (
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
-                        hierarchyExpanded ? 'rotate-180' : ''
-                      }`}
-                    />
-                  )}
                 </button>
                 {hierarchyExpanded && !collapsed && (
                   <div className='px-2 pb-3 space-y-2'>
-                    {structures.length === 0 && (
-                      <div className='text-sm text-gray-500 px-2'>
-                        No structures yet
-                      </div>
-                    )}
                     {structures.map((s) => (
                       <div
                         key={s.id}
@@ -121,20 +134,30 @@ const Sidebar: React.FC<SidebarProps> = ({
                           className={`w-full flex items-center justify-between px-3 py-3 text-sm font-semibold hover:bg-gray-50 ${
                             selectedStructureId === s.id ? 'bg-primary-50' : ''
                           }`}
-                          onClick={() => {
-                            onToggleExpand(s.id);
-                            onSelectStructure(s.id);
-                          }}
                         >
-                          <div className='flex items-center gap-2'>
+                          <button
+                            onClick={() => {
+                              onSelectStructure(s.id);
+                            }}
+                            className='flex items-center gap-[2px]'
+                          >
                             <FolderOpen className='w-4 h-4 text-primary-600' />
                             <span>{s.name}</span>
-                          </div>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedStructureId === s.id ? 'rotate-180' : ''
-                            }`}
-                          />
+                          </button>
+                          <button
+                            onClick={() => {
+                              onToggleExpand(s.id);
+                            }}
+                          >
+                            <ChevronDown
+                              className={`w-4 h-4 transition-transform hover:scale-150
+                                 ${
+                                   expandedStructureId === s.id
+                                     ? 'rotate-180'
+                                     : ''
+                                 }`}
+                            />
+                          </button>
                         </button>
                         {expandedStructureId === s.id && (
                           <div className='px-4 pb-3'>
@@ -177,7 +200,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+            </Tooltip>
 
             {/* Remaining navigation excluding default pages */}
             <NavigationMenu

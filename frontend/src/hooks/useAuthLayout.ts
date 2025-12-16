@@ -96,7 +96,6 @@ export function useAuthLayout(): UseAuthLayoutResult {
   const [selectedStructureId, setSelectedStructureId] = useState<string | null>(
     null
   );
-  
 
   useEffect(() => {
     if (!storageKey) return;
@@ -109,7 +108,7 @@ export function useAuthLayout(): UseAuthLayoutResult {
   }, [storageKey]);
 
   const setStructures = (next: Structure[]) => _setStructures(next);
-  
+
   const persistStructures = (next: Structure[]) => {
     _setStructures(next);
     if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next));

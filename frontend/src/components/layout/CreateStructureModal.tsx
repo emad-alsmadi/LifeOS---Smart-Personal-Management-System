@@ -6,9 +6,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../../components/ui/dialog';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
+} from '../ui/dialog';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
 
 export type CreateMode = 'default' | 'ai' | 'manual';
 

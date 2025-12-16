@@ -11,9 +11,9 @@ import { X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import Sidebar from '../../components/layout/Sidebar';
-import SecondarySidebar from './Sidebar/SecondarySidebar';
+import SecondarySidebar from '../../components/layout/SubSidebar';
 import MainContent from '../MainContent/MainContent';
-import CreateStructureModal from '../modals/CreateStructureModal';
+import CreateStructureModal from '../../components/layout/CreateStructureModal';
 import { useAuthLayout } from '../../hooks/useAuthLayout';
 
 interface AuthLayoutProps {
@@ -92,6 +92,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             collapsed={sidebarCollapsed}
             onToggleCollapse={handleSidebarToggle}
             structure={selectedStructure}
+            navigation={navigation}
             isActive={isActive}
             slugify={slugify}
             onBack={() => selectStructure(null)}

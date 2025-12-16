@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Plus,
-  Repeat,
-  TrendingUp,
-  CheckCircle,
-  Flame,
-  Award,
-} from 'lucide-react';
+import { Plus, Repeat, TrendingUp, CheckCircle, Flame } from 'lucide-react';
 import HabitModal from './HabitModal';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -513,7 +506,7 @@ const HabitsPage: React.FC = () => {
       <HabitModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSave={handleSave}
+        onSave={handleSave as any}
         habit={editingHabit}
       />
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Search, Tag, Star, BookOpen } from 'lucide-react';
+import { Plus, FileText, Tag, Star, BookOpen } from 'lucide-react';
 import NoteModal from './NoteModal';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import Input from '../../components/ui/Input';
+
 import { Badge } from '../../components/ui/badge';
 import {
   Select,
@@ -299,7 +299,7 @@ const NotesPage: React.FC = () => {
               </div>
 
               <Button
-                variant={showFavoritesOnly ? 'default' : 'outline'}
+                variant={showFavoritesOnly ? 'primary' : 'outline'}
                 size='sm'
                 onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 className={
@@ -449,8 +449,8 @@ const NotesPage: React.FC = () => {
       <NoteModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSave={handleSave}
-        note={editingNote}
+        onSave={handleSave as any}
+        note={editingNote as any}
         categories={categories}
       />
     </>
