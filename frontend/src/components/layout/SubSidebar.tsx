@@ -33,7 +33,7 @@ const SubSidebar: React.FC<SubSidebarProps> = ({
   slugify,
   onBack,
 }) => {
-  const base = `/s/${structure.id}`;
+  const base = `/structures/${structure.id}`;
   const items = [
     // { name: 'Action Zone', href: `${base}`, icon: LayoutGrid },
     { name: 'Calendar', href: `${base}/calendar`, icon: Calendar },

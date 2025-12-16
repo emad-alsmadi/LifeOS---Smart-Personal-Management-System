@@ -60,6 +60,12 @@ import {
 import TaskCalendarModal from '../tasks/TaskCalendarModal';
 
 const ActionZone: React.FC = () => {
+  // Extend Event locally to reflect optional fields used in Dashboard UI
+  type ExtendedEvent = Event & {
+    location?: string;
+    category?: string;
+    notes?: string;
+  };
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -107,7 +113,9 @@ const ActionZone: React.FC = () => {
   const [goalDetailsOpen, setGoalDetailsOpen] = useState(false);
   const [detailsGoal, setDetailsGoal] = useState<Goal | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<ExtendedEvent | null>(
+    null
+  );
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [noteDetailsOpen, setNoteDetailsOpen] = useState(false);
@@ -462,7 +470,7 @@ const ActionZone: React.FC = () => {
     }
   };
 
-  const handleEventClick = (event: Event) => {
+  const handleEventClick = (event: ExtendedEvent) => {
     console.log('[ActionZone] handleEventClick - start', event);
     setSelectedEvent(event);
     setEventDetailsOpen(true);

@@ -13,6 +13,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useApiCalls } from './useApiCalls';
+import {
+  getStructures as apiGetStructures,
+  createStructure as apiCreateStructure,
+  updateStructureLevels as apiUpdateStructureLevels,
+  deleteStructure as apiDeleteStructure,
+  type Structure as ApiStructure,
+} from '../lib/api/api';
 
 export type IconType = React.ComponentType<{ className?: string }>;
 
@@ -69,6 +76,8 @@ export interface UseAuthLayoutResult {
   resetCreateState: () => void;
   handleCreate: () => void;
   handleAIAssistance: () => Promise<void>;
+  updateLevels: (structureId: string, levels: string[]) => Promise<void>;
+  deleteStructure: (structureId: string) => Promise<void>;
   navigate: ReturnType<typeof useNavigate>;
 }
 
@@ -98,20 +107,31 @@ export function useAuthLayout(): UseAuthLayoutResult {
   );
 
   useEffect(() => {
-    if (!storageKey) return;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) _setStructures(JSON.parse(raw));
-      const sel = localStorage.getItem(`${storageKey}:selected`);
-      if (sel) setSelectedStructureId(sel);
-    } catch {}
-  }, [storageKey]);
+    const load = async () => {
+      try {
+        const list: ApiStructure[] = await apiGetStructures();
+        _setStructures(
+          (list || []).map((s) => ({
+            id: s._id,
+            name: s.name,
+            levels: Array.isArray(s.levels) ? s.levels : [],
+          }))
+        );
+      } catch {}
+      try {
+        if (storageKey) {
+          const sel = localStorage.getItem(`${storageKey}:selected`);
+          if (sel) setSelectedStructureId(sel);
+        }
+      } catch {}
+    };
+    if (user?._id) load();
+  }, [user?._id, storageKey]);
 
   const setStructures = (next: Structure[]) => _setStructures(next);
 
   const persistStructures = (next: Structure[]) => {
     _setStructures(next);
-    if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next));
   };
 
   const selectStructure = (id: string | null) => {
@@ -203,7 +223,7 @@ export function useAuthLayout(): UseAuthLayoutResult {
     setAiError(null);
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     let name = structureName.trim();
     let levels: string[] = [];
     if (createMode === 'default') {
@@ -215,10 +235,18 @@ export function useAuthLayout(): UseAuthLayoutResult {
         .filter(Boolean);
     }
     if (!name || levels.length === 0) return;
-    const newStruct: Structure = { id: crypto.randomUUID(), name, levels };
-    persistStructures([...(structures || []), newStruct]);
-    setCreateOpen(false);
-    resetCreateState();
+    try {
+      const created = await apiCreateStructure({ name, levels });
+      const mapped: Structure = {
+        id: created._id,
+        name: created.name,
+        levels: Array.isArray(created.levels) ? created.levels : [],
+      };
+      setStructures([...(structures || []), mapped]);
+    } finally {
+      setCreateOpen(false);
+      resetCreateState();
+    }
   };
 
   const handleAIAssistance = useCallback(async () => {
@@ -244,6 +272,27 @@ export function useAuthLayout(): UseAuthLayoutResult {
       setAiLoading(false);
     }
   }, [aiInput, suggestStructure]);
+
+  const updateLevels = async (structureId: string, levels: string[]) => {
+    const updated = await apiUpdateStructureLevels(structureId, levels);
+    setStructures(
+      (structures || []).map((s) =>
+        s.id === structureId
+          ? {
+              id: updated._id,
+              name: updated.name,
+              levels: Array.isArray(updated.levels) ? updated.levels : [],
+            }
+          : s
+      )
+    );
+  };
+
+  const deleteStructure = async (structureId: string) => {
+    await apiDeleteStructure(structureId);
+    setStructures((structures || []).filter((s) => s.id !== structureId));
+    if (selectedStructureId === structureId) selectStructure(null);
+  };
 
   return {
     user,
@@ -283,6 +332,8 @@ export function useAuthLayout(): UseAuthLayoutResult {
     resetCreateState,
     handleCreate,
     handleAIAssistance,
+    updateLevels,
+    deleteStructure,
     navigate,
   };
 }

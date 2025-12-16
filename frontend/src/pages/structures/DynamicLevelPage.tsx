@@ -39,6 +39,8 @@ import {
   getTasks,
   createTask,
   type Task,
+  getStructureById,
+  type Structure as ApiStructure,
 } from '../../lib/api/api';
 
 // Minimal structure shape as stored in localStorage by AuthLayout
@@ -79,11 +81,6 @@ const palette = [
 const DynamicLevelPage: React.FC = () => {
   const { structureId, levelSlug } = useParams();
   const { user } = useAuth();
-  // Resolve the per-user storage key used by AuthLayout to store structures
-  const storageKey = useMemo(
-    () => (user?._id ? `structures:${user._id}` : null),
-    [user?._id]
-  );
   // Generic items storage key for dynamic levels >= 4
   const genericKey = useMemo(
     () =>
@@ -128,20 +125,24 @@ const DynamicLevelPage: React.FC = () => {
 
   // Resolve structure and level from URL params
   useEffect(() => {
-    if (!storageKey || !structureId) return;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      const list: Structure[] = raw ? JSON.parse(raw) : [];
-      const s = list.find((x) => x.id === structureId) || null;
-      setStructure(s);
-      if (s) {
+    const loadStructure = async () => {
+      if (!structureId) return;
+      try {
+        const apiStructure: ApiStructure = await getStructureById(structureId);
+        const s: Structure = {
+          id: apiStructure._id,
+          name: apiStructure.name,
+          levels: Array.isArray(apiStructure.levels) ? apiStructure.levels : [],
+        };
+        setStructure(s);
         const idx = s.levels.findIndex((l) => slugify(l) === (levelSlug || ''));
         const name = idx >= 0 ? s.levels[idx] : '';
         setLevelIndex(idx >= 0 ? idx : 0);
         setLevelName(name);
-      }
-    } catch {}
-  }, [storageKey, structureId, levelSlug]);
+      } catch {}
+    };
+    loadStructure();
+  }, [structureId, levelSlug]);
 
   // Load list data for the current level (reuses existing entity APIs)
   useEffect(() => {

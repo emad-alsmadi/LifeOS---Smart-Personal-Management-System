@@ -133,6 +133,20 @@ export interface User {
   updatedAt: string;
 }
 
+export interface StructureCreate {
+  name: string;
+  levels: string[];
+}
+
+export interface Structure {
+  _id: string;
+  userId: string;
+  name: string;
+  levels: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Auth token management
 let authToken: string | null = localStorage.getItem('authToken');
 
@@ -191,6 +205,49 @@ export const login = async (email: string, password: string) => {
   });
   setAuthToken(response.token);
   return response;
+};
+
+export const getStructures = async (): Promise<Structure[]> => {
+  return apiRequest('/structures');
+};
+
+export const createStructure = async (
+  payload: StructureCreate
+): Promise<Structure> => {
+  return apiRequest('/structures', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateStructure = async (
+  id: string,
+  payload: Partial<StructureCreate>
+): Promise<Structure> => {
+  return apiRequest(`/structures/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+};
+
+export const getStructureById = async (id: string): Promise<Structure> => {
+  return apiRequest(`/structures/${id}`);
+};
+
+export const updateStructureLevels = async (
+  id: string,
+  levels: string[]
+): Promise<Structure> => {
+  return apiRequest(`/structures/${id}/levels`, {
+    method: 'PUT',
+    body: JSON.stringify({ levels }),
+  });
+};
+
+export const deleteStructure = async (id: string): Promise<void> => {
+  return apiRequest(`/structures/${id}`, {
+    method: 'DELETE',
+  });
 };
 
 export const signup = async (name: string, email: string, password: string) => {

@@ -135,7 +135,7 @@ function AppRoutes() {
 
       {/* Dynamic */}
       <Route
-        path='/s/:structureId'
+        path='/structures/:structureId'
         element={
           <ProtectedRoute>
             <StructureHomePage />
@@ -143,7 +143,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path='/s/:structureId/calendar'
+        path='/structures/:structureId/calendar'
         element={
           <ProtectedRoute>
             <StructureCalendarPage />
@@ -151,7 +151,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path='/s/:structureId/habits'
+        path='/structures/:structureId/habits'
         element={
           <ProtectedRoute>
             <StructureHabitsPage />
@@ -159,7 +159,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path='/s/:structureId/notes'
+        path='/structures/:structureId/notes'
         element={
           <ProtectedRoute>
             <StructureNotesPage />
@@ -167,7 +167,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path='/s/:structureId/:levelSlug'
+        path='/structures/:structureId/:levelSlug'
         element={
           <ProtectedRoute>
             <DynamicLevelPage />

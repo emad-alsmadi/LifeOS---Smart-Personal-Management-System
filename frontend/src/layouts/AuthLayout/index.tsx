@@ -60,7 +60,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   // Auto navigate to structure home when selecting a structure
   useEffect(() => {
     if (selectedStructure && selectedStructure.id) {
-      navigate(`/s/${selectedStructure.id}`);
+      navigate(`/structures/${selectedStructure.id}`);
     }
   }, [selectedStructure?.id]);
 
